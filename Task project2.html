@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Roboto:wght@300;400;700&display=swap');
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background: linear-gradient(135deg, #1e3c72, #2a5298); 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            color: white;
+        }
+        .container { 
+            width: 500px; 
+            background: #1c1c1e; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5); 
+            text-align: center; 
+            font-family: 'Roboto', sans-serif;
+        }
+        h2 { color: #f8f8f8; font-weight: 700; }
+        input, select, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            font-family: 'Montserrat', sans-serif;
+        }
+        input[type="date"] { cursor: pointer; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            font-weight: bold;
+        }
+        button:hover { background: #0056b3; }
+        .task-list { 
+            list-style: none; 
+            padding: 0; 
+        }
+        .task { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px; 
+            margin: 6px 0; 
+            background: #333; 
+            border-radius: 8px; 
+            transition: 0.3s; 
+            color: white;
+            font-weight: 400;
+        }
+        .completed { text-decoration: line-through; color: gray; }
+        .priority { font-weight: bold; }
+        .low { color: green; }
+        .medium { color: orange; }
+        .high { color: red; }
+        .dark-mode { background: #121212; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>&#128221; Task Manager</h2>
+        <input type="text" id="taskTitle" placeholder="Task Title">
+        <input type="text" id="taskDesc" placeholder="Task Description">
+        <input type="date" id="taskDate">
+        <select id="taskPriority">
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+        </select>
+        <button onclick="addTask()">&#10133; Add Task</button>
+        <button onclick="toggleDarkMode()">&#127769; Toggle Dark Mode</button>
+        <ul id="taskList" class="task-list"></ul>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        let darkMode = false;
+
+        function saveTasks() {
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function addTask() {
+            const title = document.getElementById("taskTitle").value.trim();
+            const desc = document.getElementById("taskDesc").value.trim();
+            const date = document.getElementById("taskDate").value;
+            const priority = document.getElementById("taskPriority").value;
+            if (!title || !date) return;
+            tasks.push({ id: Date.now(), title, desc, date, priority, completed: false });
+            saveTasks();
+            renderTasks();
+        }
+
+        function toggleComplete(id) {
+            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
+            saveTasks();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        function editTask(id) {
+            const task = tasks.find(task => task.id === id);
+            const newTitle = prompt("Edit Task Title", task.title) || task.title;
+            const newDesc = prompt("Edit Task Description", task.desc) || task.desc;
+            const newDate = prompt("Edit Task Date", task.date) || task.date;
+            task.title = newTitle.trim();
+            task.desc = newDesc.trim();
+            task.date = newDate.trim();
+            saveTasks();
+            renderTasks();
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            document.body.classList.toggle("dark-mode", darkMode);
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.className = `task ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <span>
+                        ${task.completed ? '✔️' : '❌'} ${task.title} - ${task.desc} - ${task.date} 
+                        <span class="priority ${task.priority}">(${task.priority})</span>
+                    </span>
+                    <button onclick="editTask(${task.id})">✏️ Edit</button>
+                    <button onclick="toggleComplete(${task.id})">${task.completed ? '❌ Cancel' : '✔️ Complete'}</button>
+                    <button onclick="deleteTask(${task.id})">🗑️ Delete</button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        renderTasks();
+    </script>
+</body>
+</html>
